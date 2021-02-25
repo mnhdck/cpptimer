@@ -10,15 +10,68 @@ C++ Timer，纯C++实现的定时器，支持两种计数类型的定时器，
 
 #### 安装教程
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+1.  复制src文件到你的工程即可使用
+2.  也可以把src编译成lib库提供给App使用
 
 #### 使用说明
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+1.  基本使用
+
+```
+    TimerSharedPtr timer = CTimer::Create();
+    timer->SetTimeoutCb([](TimerBase* pTimer) {
+        std::cout << "Timeout Once! id=" << pTimer->GetTimerID() << std::endl;
+    });
+    timer->Start(1000, true);
+    
+    while (true)
+    {
+        // 需要在使用的线程循环中调用 Loop 函数
+        TimerContext::DefaultLoop();
+    }
+```
+
+2.  多个线程中使用
+
+```
+bool bRunning = false;
+void threadFunction()
+{
+    while (bRunning)
+    {
+        TimerContext::DefaultLoop();
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+}
+int main()
+{
+    TimerContext context;
+    TimerSharedPtr timer = CTimer::Create(&context);
+    
+    timer->SetTimeoutCb([](TimerBase* pTimer) {
+        std::cout << "Test Timer... id="<< pTimer->GetTimerID() << std::endl;
+    });
+    timer->SetTimerType(TimerBase::E_Accuracy);
+    timer->Start(100, true);
+
+    TimerSharedPtr timer2 = CTimer::Create();
+    timer2->SetTimeoutCb([](TimerBase* pTimer) {
+        std::cout << "Timeout Once! id=" << pTimer->GetTimerID() << std::endl;
+    });
+    timer2->Start(1000, true);
+    
+    bRunning = true;
+    std::thread otherThread(threadFunction);
+    while (true)
+    {
+        context.Loop();
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    bRunning = false;
+    otherThread.join();
+}
+```
+
 
 #### 参与贡献
 
@@ -26,13 +79,5 @@ C++ Timer，纯C++实现的定时器，支持两种计数类型的定时器，
 2.  新建 Feat_xxx 分支
 3.  提交代码
 4.  新建 Pull Request
+5.  管理员审核合并
 
-
-#### 特技
-
-1.  使用 Readme\_XXX.md 来支持不同的语言，例如 Readme\_en.md, Readme\_zh.md
-2.  Gitee 官方博客 [blog.gitee.com](https://blog.gitee.com)
-3.  你可以 [https://gitee.com/explore](https://gitee.com/explore) 这个地址来了解 Gitee 上的优秀开源项目
-4.  [GVP](https://gitee.com/gvp) 全称是 Gitee 最有价值开源项目，是综合评定出的优秀开源项目
-5.  Gitee 官方提供的使用手册 [https://gitee.com/help](https://gitee.com/help)
-6.  Gitee 封面人物是一档用来展示 Gitee 会员风采的栏目 [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
